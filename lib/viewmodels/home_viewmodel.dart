@@ -16,17 +16,12 @@ class HomeViewModel extends ChangeNotifier {
   bool _isLoading = false;
   TranslationModel? _translationData;
   String _errorMessage = '';
-
+  
   String sourceLanguage = 'English';
   String targetLanguage = 'Kannada';
-
+  
   final List<String> languages = [
-    'English',
-    'Hindi',
-    'Kannada',
-    'Tamil',
-    'Telugu',
-    'Malayalam',
+    'English', 'Hindi', 'Kannada', 'Tamil', 'Telugu', 'Malayalam'
   ];
 
   bool get isRecording => _isRecording;
@@ -34,7 +29,17 @@ class HomeViewModel extends ChangeNotifier {
   TranslationModel? get translationData => _translationData;
   String get errorMessage => _errorMessage;
 
+  // === NEW: Clears old data automatically ===
+  void clearData() {
+    _translationData = null;
+    _errorMessage = '';
+    notifyListeners();
+  }
+
   Future<void> startRecording() async {
+    // 1. AUTO REFRESH: Clear previous results immediately
+    clearData();
+
     var status = await Permission.microphone.request();
     if (status != PermissionStatus.granted) {
       _errorMessage = "Microphone permission needed";
@@ -49,7 +54,6 @@ class HomeViewModel extends ChangeNotifier {
       if (await _audioRecorder.hasPermission()) {
         await _audioRecorder.start(const RecordConfig(), path: path);
         _isRecording = true;
-        _errorMessage = '';
         notifyListeners();
       }
     } catch (e) {
@@ -59,6 +63,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> stopRecording() async {
+    // Stop recorder
     final path = await _audioRecorder.stop();
     _isRecording = false;
     notifyListeners();
@@ -74,9 +79,9 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     _translationData = await _apiService.translateAudio(
-      audioFile,
-      sourceLanguage,
-      targetLanguage,
+      audioFile, 
+      sourceLanguage, 
+      targetLanguage
     );
 
     _isLoading = false;
@@ -90,16 +95,12 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> playTranslatedAudio() async {
-    if (_translationData != null &&
-        _translationData!.audioFileName.isNotEmpty) {
-      // Wait for the correct URL (based on current IP settings)
-      String url = await _apiService.getAudioUrl(
-        _translationData!.audioFileName,
-      );
+    if (_translationData != null && _translationData!.audioFileName.isNotEmpty) {
+      String url = await _apiService.getAudioUrl(_translationData!.audioFileName);
       await _audioPlayer.play(UrlSource(url));
     }
   }
-
+  
   void setSourceLanguage(String? lang) {
     if (lang != null) {
       sourceLanguage = lang;
@@ -112,5 +113,14 @@ class HomeViewModel extends ChangeNotifier {
       targetLanguage = lang;
       notifyListeners();
     }
+  }
+  
+  // Swap languages for convenience
+  void swapLanguages() {
+    String temp = sourceLanguage;
+    sourceLanguage = targetLanguage;
+    targetLanguage = temp;
+    clearData(); // Clear data on swap
+    notifyListeners();
   }
 }
