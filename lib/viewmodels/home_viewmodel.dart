@@ -21,7 +21,16 @@ class HomeViewModel extends ChangeNotifier {
   String targetLanguage = 'Kannada';
   
   final List<String> languages = [
-    'English', 'Hindi', 'Kannada', 'Tamil', 'Telugu', 'Malayalam'
+    'English', 
+    'Hindi', 
+    'Kannada', 
+    'Tamil', 
+    'Telugu', 
+    'Malayalam',
+    'Marathi',
+    'Gujarati',
+    'Bengali',
+    'Punjabi'
   ];
 
   bool get isRecording => _isRecording;
